@@ -38,7 +38,7 @@ module.exports.likeCard = (req, res) => {
         {new: true},
     )
         .orFail(() => new Error('Not Found'))
-        .then((card) => res.status(200).send({data: card}))
+        .then((card) => res.status(20).send({data: card}))
         .catch((err) => {
             console.log(err.name);
             if (err.name === 'ValidationError' || err.name === 'CastError') {
