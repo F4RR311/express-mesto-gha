@@ -40,18 +40,20 @@ module.exports.likeCard = (req, res) => {
         {new: true},
     )
         .orFail(() => new Error('Not Found'))
-        .then((like) => res.send(like))
+        .then((card) => {
+            if (!card) {
+                res.status(NOT_FOUND).send({message: 'Карточка с указанным _id не найдена'});
+            } else {
+                res.send({data: card});
+            }
+        })
         .catch((err) => {
-            console.log(err.name);
-            if (err.name === 'ValidationError' || err.name === 'CastError') {
-                res.status(BAD_REQ).send({message: 'Переданы некорректные данные для постановки лайка.'});
-                return;
+            if (err.name === 'CastError') {
+                return res.status(BAD_REQ).send({
+                    message: 'Переданы некорректные данные для постановки лайка',
+                });
             }
-            if (err.message === 'Not Found') {
-                res.status(NOT_FOUND).send({message: 'Передан несуществующий _id карточки.'});
-                return;
-            }
-            res.status(CAST_ERR).send({message: 'Ошибка по умолчанию.'});
+            return res.status(CAST_ERR).send({message: 'Ошибка по умолчанию'});
         });
 };
 
