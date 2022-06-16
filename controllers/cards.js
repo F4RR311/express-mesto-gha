@@ -22,7 +22,7 @@ module.exports.createCard = (req, res) => {
     const {name, link} = req.body;
     const owner = req.user._id;
     Card.create({name, link, owner})
-        .then((card) => res.status(200).send({ data: card }))
+        .then((card) => res.status(200).send(card))
         .catch((err) => {
             if (err.name === 'ValidationError') {
                 return res.status(BAD_REQ).send({
@@ -40,14 +40,14 @@ module.exports.likeCard = (req, res) => {
         {new: true},
     )
         .orFail(() => new Error('Not Found'))
-        .then((like) => res.status(200).send(like))
+        .then((like) => res.send(like))
         .catch((err) => {
             console.log(err.name);
             if (err.name === 'ValidationError' || err.name === 'CastError') {
                 res.status(BAD_REQ).send({message: 'Переданы некорректные данные для постановки лайка.'});
                 return;
             }
-            if (err.name === 'CastError') {
+            if (err.message === 'Not Found') {
                 res.status(NOT_FOUND).send({message: 'Передан несуществующий _id карточки.'});
                 return;
             }
@@ -58,13 +58,13 @@ module.exports.likeCard = (req, res) => {
 module.exports.dislikeCard = (req, res) => {
     Card.findByIdAndUpdate(req.params.cardId, {$addToSet: {likes: {_id: req.user._id}}}, {new: true})
         .orFail(() => new Error('Not Found'))
-        .then((dislike) => res.status(200).send(dislike))
+        .then((dislike) => res.send(dislike))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
                 res.status(BAD_REQ).send({message: 'Переданы некорректные данные для снятия лайка.'});
                 return;
             }
-            if (err.name === 'CastError') {
+            if (err.message === 'Not Found') {
                 res.status(NOT_FOUND).send({message: 'Передан несуществующий _id карточки.'});
                 return;
             }
@@ -75,13 +75,13 @@ module.exports.dislikeCard = (req, res) => {
 module.exports.deleteCard = (req, res) => {
     Card.findByIdAndRemove(req.params.cardId)
         .orFail(() => new Error('Not Found'))
-        .then((card) => res.status(200).send(card))
+        .then((card) => res.send(card))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
                 res.status(BAD_REQ).send({message: 'Переданы некорректные данные для постановки лайка.'});
                 return;
             }
-            if (err.name === 'CastError') {
+            if (err.message === 'Not Found') {
                 res.status(NOT_FOUND).send({message: 'Карточка с указанным _id не найдена.'});
                 return;
             }
