@@ -1,4 +1,4 @@
-const Cards = require('../models/card');
+const Card = require('../models/card');
 
 const BAD_REQ = 400;
 const NOT_FOUND = 404;
@@ -6,7 +6,7 @@ const CAST_ERR = 500;
 
 
 module.exports.getCard = (req, res) => {
-    Cards.find({})
+    Card.find({})
         .populate('owner')
         .then((card) => res.send({data: card}))
         .catch((err) => {
@@ -20,7 +20,7 @@ module.exports.getCard = (req, res) => {
 
 module.exports.createCard = (req, res) => {
     const {name, link} = req.body;
-    Cards.create({name, link, owner: {_id: req.user._id}})
+    Card.create({name, link, owner: {_id: req.user._id}})
         .then((card) => res.send({ data: card }))
         .catch((err) => {
             if (err.name === 'ValidationError') {
@@ -32,7 +32,7 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
-    Cards.findByIdAndUpdate(
+    Card.findByIdAndUpdate(
         req.params.cardId,
         {$addToSet: {likes: {_id: req.user._id}}}, // добавить _id в массив, если его там нет
         {new: true},
@@ -54,7 +54,7 @@ module.exports.likeCard = (req, res) => {
 };
 
 module.exports.dislikeCard = (req, res) => {
-    Cards.findByIdAndUpdate(req.params.cardId, {$addToSet: {likes: {_id: req.user._id}}}, {new: true})
+    Card.findByIdAndUpdate(req.params.cardId, {$addToSet: {likes: {_id: req.user._id}}}, {new: true})
         .orFail(() => new Error('Not Found'))
         .then((dislike) => res.send(dislike))
         .catch((err) => {
@@ -71,7 +71,7 @@ module.exports.dislikeCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-    Cards.findByIdAndRemove(req.params.cardId)
+    Card.findByIdAndRemove(req.params.cardId)
         .orFail(() => new Error('Not Found'))
         .then((card) => res.send(card))
         .catch((err) => {
