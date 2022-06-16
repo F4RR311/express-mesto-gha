@@ -8,7 +8,13 @@ const CAST_ERR = 500;
 module.exports.getCard = (req, res) => {
     Cards.find({})
         .then((cards) => res.send({data: cards}))
-        .catch((err) => res.status(500).send({message: 'Ошибка по-умолчанию', err}));
+        .catch((err) => {
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                res.status(BAD_REQ).send({ message: 'Переданы некорректные данные при создании карточки.' });
+                return;
+            }
+            res.status(CAST_ERR).send({ message: 'Ошибка по умолчанию.' });
+        });
 };
 
 module.exports.createCard = (req, res) => {
@@ -17,10 +23,11 @@ module.exports.createCard = (req, res) => {
     Cards.create({name, link, owner: ownerId})
         .then((card) => res.status(200).send({data: card}))
         .catch((err) => {
-            if (err.name === 'ValidationError') {
-                return res.status(400).send({message: 'Переданы некорректные данные при создании карточки.'});
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                res.status(BAD_REQ).send({ message: 'Переданы некорректные данные при создании карточки.' });
+                return;
             }
-            return res.status(500).send({message: 'Ошибка по-умолчанию'});
+            res.status(CAST_ERR).send({ message: 'Ошибка по умолчанию.' });
         });
 };
 
@@ -30,16 +37,19 @@ module.exports.likeCard = (req, res) => {
         {$addToSet: {likes: req.user._id}}, // добавить _id в массив, если его там нет
         {new: true},
     )
-
+        .orFail(() => new Error('Not Found'))
         .then((card) => res.status(200).send({data: card}))
         .catch((err) => {
-            if (err.name === 'CastError') {
-                return res.status(400).send({message: 'Переданы некорректные данные при создании карточки.'});
+            console.log(err.name);
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                res.status(BAD_REQ).send({ message: 'Переданы некорректные данные для постановки лайка.' });
+                return;
             }
-            if (err.statusCode === 404) {
-                return res.status(404).send({message: 'Карточка не найдена'});
+            if (err.message === 'Not Found') {
+                res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки.' });
+                return;
             }
-            return res.status(500).send({message: 'Ошибка по-умолчанию'});
+            res.status(CAST_ERR).send({ message: 'Ошибка по умолчанию.' });
         });
 };
 
