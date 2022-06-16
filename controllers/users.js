@@ -19,9 +19,8 @@ module.exports.getUser = (req, res) => {
 
 module.exports.getUserId = (req, res) => {
     Users.findById(req.params.userId)
-        .then((user) => {
-            res.status(200).send({data: user})
-        })
+        .orFail(() => new Error('Not Found'))
+        .then((user) => res.send(user))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
                 res.status(BAD_REQ).send({message: 'Переданы некорректные данные при запросе пользователя.'});
