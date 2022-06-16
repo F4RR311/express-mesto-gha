@@ -21,7 +21,7 @@ module.exports.getCard = (req, res) => {
 module.exports.createCard = (req, res) => {
     const {name, link} = req.body;
     Cards.create({name, link, owner: {_id: req.user._id}})
-        .then((card) => res.status(200).send({data: card}))
+        .then((card) => res.send(card))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
                 res.status(BAD_REQ).send({message: 'Переданы некорректные данные при создании карточки.'});
@@ -38,7 +38,7 @@ module.exports.likeCard = (req, res) => {
         {new: true},
     )
         .orFail(() => new Error('Not Found'))
-        .then((card) => res.status(20).send({data: card}))
+        .then((like) => res.send(like))
         .catch((err) => {
             console.log(err.name);
             if (err.name === 'ValidationError' || err.name === 'CastError') {
@@ -56,7 +56,7 @@ module.exports.likeCard = (req, res) => {
 module.exports.dislikeCard = (req, res) => {
     Cards.findByIdAndUpdate(req.params.cardId, {$addToSet: {likes: {_id: req.user._id}}}, {new: true})
         .orFail(() => new Error('Not Found'))
-        .then((card) => res.status(200).send({data: card}))
+        .then((dislike) => res.send(dislike))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
                 res.status(BAD_REQ).send({message: 'Переданы некорректные данные для снятия лайка.'});
@@ -73,7 +73,7 @@ module.exports.dislikeCard = (req, res) => {
 module.exports.deleteCard = (req, res) => {
     Cards.findByIdAndRemove(req.params.cardId)
         .orFail(() => new Error('Not Found'))
-        .then((card) => res.status(200).send({data: card}))
+        .then((card) => res.send(card))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
                 res.status(BAD_REQ).send({message: 'Переданы некорректные данные для постановки лайка.'});
