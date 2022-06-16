@@ -7,34 +7,34 @@ const CAST_ERR = 500;
 
 module.exports.getCard = (req, res) => {
     Cards.find({})
+        .populate('owner')
         .then((cards) => res.send({data: cards}))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
-                res.status(BAD_REQ).send({ message: 'Переданы некорректные данные при создании карточки.' });
+                res.status(BAD_REQ).send({message: 'Переданы некорректные данные при создании карточки.'});
                 return;
             }
-            res.status(CAST_ERR).send({ message: 'Ошибка по умолчанию.' });
+            res.status(CAST_ERR).send({message: 'Ошибка по умолчанию.'});
         });
 };
 
 module.exports.createCard = (req, res) => {
     const {name, link} = req.body;
-    const ownerId = req.user._id;
-    Cards.create({name, link, owner: ownerId})
+    Cards.create({name, link, owner: {_id: req.user._id}})
         .then((card) => res.status(200).send({data: card}))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
-                res.status(BAD_REQ).send({ message: 'Переданы некорректные данные при создании карточки.' });
+                res.status(BAD_REQ).send({message: 'Переданы некорректные данные при создании карточки.'});
                 return;
             }
-            res.status(CAST_ERR).send({ message: 'Ошибка по умолчанию.' });
+            res.status(CAST_ERR).send({message: 'Ошибка по умолчанию.'});
         });
 };
 
 module.exports.likeCard = (req, res) => {
     Cards.findByIdAndUpdate(
         req.params.cardId,
-        {$addToSet: {likes: req.user._id}}, // добавить _id в массив, если его там нет
+        {$addToSet: {likes: {_id: req.user._id}}}, // добавить _id в массив, если его там нет
         {new: true},
     )
         .orFail(() => new Error('Not Found'))
@@ -42,19 +42,19 @@ module.exports.likeCard = (req, res) => {
         .catch((err) => {
             console.log(err.name);
             if (err.name === 'ValidationError' || err.name === 'CastError') {
-                res.status(BAD_REQ).send({ message: 'Переданы некорректные данные для постановки лайка.' });
+                res.status(BAD_REQ).send({message: 'Переданы некорректные данные для постановки лайка.'});
                 return;
             }
             if (err.message === 'Not Found') {
-                res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки.' });
+                res.status(NOT_FOUND).send({message: 'Передан несуществующий _id карточки.'});
                 return;
             }
-            res.status(CAST_ERR).send({ message: 'Ошибка по умолчанию.' });
+            res.status(CAST_ERR).send({message: 'Ошибка по умолчанию.'});
         });
 };
 
 module.exports.dislikeCard = (req, res) => {
-    Cards.findByIdAndUpdate(req.params.cardId, {$pull: {likes: req.user._id}}, {new: true})
+    Cards.findByIdAndUpdate(req.params.cardId, {$addToSet: {likes: {_id: req.user._id}}}, {new: true})
         .orFail(() => new Error('Not Found'))
         .then((card) => res.status(200).send({data: card}))
         .catch((err) => {
