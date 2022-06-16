@@ -18,7 +18,7 @@ module.exports.getUserId = (req, res) => {
             if (err.statusCode === 404) {
                 return res.status(404).send({ message: err.errorMessage });
             }
-            return res.status(500).send({ message: 'Ошибка по-умолчанию' });
+            return res.status(404).send({ message: 'Ошибка по-умолчанию' });
         });
 }
 
