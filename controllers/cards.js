@@ -61,7 +61,7 @@ module.exports.dislikeCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
     Cards.findByIdAndRemove(req.params.cardId)
-
+        .orFail(() => new Error('Not Found'))
         .then((card) => res.status(200).send({ data: card }))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
