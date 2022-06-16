@@ -48,21 +48,22 @@ module.exports.dislikeCard = (req, res) => {
         .orFail(() => new Error('Not Found'))
         .then((card) => res.status(200).send({data: card}))
         .catch((err) => {
-            if (err.name === 'CastError') {
-                return res.status(400).send({message: 'Переданы некорректные данные для постановки лайка.'});
+            if (err.name === 'ValidationError' || err.name === 'CastError') {
+                res.status(BAD_REQ).send({message: 'Переданы некорректные данные для снятия лайка.'});
+                return;
             }
-            if (err.statusCode === 404) {
-                return res.status(404).send({message: 'Передан несуществующий _id карточки.'});
+            if (err.message === 'Not Found') {
+                res.status(NOT_FOUND).send({message: 'Передан несуществующий _id карточки.'});
+                return;
             }
-            return res.status(500).send({message: 'Ошибка по-умолчанию'});
+            res.status(CAST_ERR).send({message: 'Ошибка по умолчанию.'});
         });
 };
 
 module.exports.deleteCard = (req, res) => {
     Cards.findByIdAndRemove(req.params.cardId)
         .orFail(() => new Error('Not Found'))
-        .then((card) => res.send(card))
-        //.then((card) => res.status(200).send({data: card}))
+        .then((card) => res.status(200).send({data: card}))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
                 res.status(BAD_REQ).send({message: 'Переданы некорректные данные для постановки лайка.'});
