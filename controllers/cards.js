@@ -19,16 +19,15 @@ module.exports.getCard = (req, res) => {
 };
 
 module.exports.createCard = (req, res) => {
-    const { name, link } = req.body;
-
-    Card.create({ name, link, owner: { _id: req.user._id } })
+    const {name, link} = req.body;
+    Cards.create({name, link, owner: {_id: req.user._id}})
         .then((card) => res.send(card))
         .catch((err) => {
             if (err.name === 'ValidationError' || err.name === 'CastError') {
-                res.status(BAD_REQ).send({ message: 'Переданы некорректные данные при создании карточки.' });
+                res.status(BAD_REQ).send({message: 'Переданы некорректные данные при создании карточки.'});
                 return;
             }
-            res.status(CAST_ERR).send({ message: 'Ошибка по умолчанию.' });
+            res.status(CAST_ERR).send({message: 'Ошибка по умолчанию.'});
         });
 };
 
