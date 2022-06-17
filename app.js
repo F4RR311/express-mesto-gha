@@ -8,8 +8,6 @@ const routerErrorWay = require('./routes/errorsway');
 const {PORT = 3000} = process.env;
 const app = express();
 
-const NOT_FOUND = 404;
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -23,11 +21,6 @@ app.use((req, res, next) => {
 });
 
 app.use(routerErrorWay);
-
-
-// app.use((req, res) => {
-//     res.status(NOT_FOUND).send({ message: 'Путь не найден' });
-// });
 
 app.listen(PORT, () => {
     console.log(`App listening on port ${PORT}`);
