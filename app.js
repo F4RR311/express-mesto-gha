@@ -1,9 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const routerErrorWay = require('./routes/errorsway');
 
-const users = require('./routes/users');
-const cards = require('./routes/cards');
 
 // Слушаем 3000 порт
 const {PORT = 3000} = process.env;
@@ -23,12 +22,12 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/users', users);
-app.use('/cards', cards);
+app.use(routerErrorWay);
 
-app.use((req, res) => {
-    res.status(NOT_FOUND).send({ message: 'Путь не найден' });
-});
+
+// app.use((req, res) => {
+//     res.status(NOT_FOUND).send({ message: 'Путь не найден' });
+// });
 
 app.listen(PORT, () => {
     console.log(`App listening on port ${PORT}`);
