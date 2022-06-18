@@ -1,19 +1,11 @@
 const Card = require('../models/card');
-
-const BAD_REQ = 400;
-const NOT_FOUND = 404;
-const CAST_ERR = 500;
-
+const  {BAD_REQ, NOT_FOUND, CAST_ERR} = require('../utils/constants')
 
 module.exports.getCard = (req, res) => {
     Card.find({})
         .populate('owner')
         .then((card) => res.send({data: card}))
         .catch((err) => {
-            if (err.name === 'ValidationError' || err.name === 'CastError') {
-                res.status(BAD_REQ).send({message: 'Переданы некорректные данные при создании карточки.'});
-                return;
-            }
             res.status(CAST_ERR).send({message: 'Ошибка по умолчанию.'});
         });
 };
@@ -22,7 +14,7 @@ module.exports.createCard = (req, res) => {
     const {name, link} = req.body;
     const owner = req.user._id;
     Card.create({name, link, owner})
-        .then((card) => res.status(200).send(card))
+        .then((card) => res.send(card))
         .catch((err) => {
             if (err.name === 'ValidationError') {
                 return res.status(BAD_REQ).send({
