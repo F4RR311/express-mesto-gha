@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/F4RR311/express-mesto-gha#readme",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.2",
     "celebrate": "^15.0.1",
