@@ -1,4 +1,5 @@
 const router = require('express').Router();
+// const auth = require('../middlewares/auth.js');
 const {
   getUser,
   getUserId,
@@ -8,9 +9,9 @@ const {
   getUserMe,
 } = require('../controllers/users');
 
-router.get('/', getUser);
+router.get('/',  getUser);
+router.get('/me',  getUserMe)
 router.get('/:userId', getUserId);
-router.get('/me', getUserMe)
 router.post('/', createUser);
 router.patch('/me', updateUserInfo);
 router.patch('/me/avatar', updateAvatar);
