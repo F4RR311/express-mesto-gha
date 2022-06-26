@@ -10,11 +10,18 @@ const {
   getUserMe,
 } = require('../controllers/users');
 
-router.get('/', getUser);
-router.get('/me', getUserMe);
-router.get('/:userId', getUserId);
+const {
+  userAvatarValid,
+  parameterIdValid,
+  userValid,
+} = require('../middlewares/validationJoi');
+
+
+router.get('/', auth, getUser);
+router.get('/me', auth, getUserMe);
+router.get('/:userId', auth, parameterIdValid('userId'), getUserId);
 router.post('/', createUser);
-router.patch('/me', updateUserInfo);
-router.patch('/me/avatar', updateAvatar);
+router.patch('/me', auth, userValid, updateUserInfo);
+router.patch('/me/avatar', auth, userAvatarValid, updateAvatar);
 
 module.exports = router;

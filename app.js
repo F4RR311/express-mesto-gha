@@ -1,23 +1,38 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const {errors} = require('celebrate');
 const routerErrorWay = require('./routes/errorsway');
+const {registerValid, loginValid} = require('./middlewares/validationJoi');
+const {requestLogger, errorLogger} = require('./middlewares/logger');
+const {createUser, login} = require('./controllers/users');
+const auth = require('./middlewares/auth');
+const errorHandler = require('./middlewares/errorHandler');
 
 // Слушаем 3000 порт
-const { PORT = 3000 } = process.env;
+const {PORT = 3000} = process.env;
 const app = express();
 
+app.use(requestLogger);
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb', { useNewUrlParser: true });
+app.post('/signup', registerValid, createUser);
+app.post('/signin', loginValid, login);
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '62a90c7d51e8680fbf057f48', // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
-  next();
-});
+mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {useNewUrlParser: true});
+
+app.use('/cards', require('./routes/cards'));
+
+app.use(errorLogger);
+
+app.use(auth);
+
+app.use(routerErrorWay);
+
+app.use(errors());
+
+app.use(errorHandler);
 
 app.use(routerErrorWay);
 
