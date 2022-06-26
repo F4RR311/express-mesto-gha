@@ -13,12 +13,13 @@ const {
 const {
   userAvatarValid,
   userValid,
+  parameterIdValid
 } = require('../middlewares/validationJoi');
 
 
-router.get('/', auth, getUser);
-router.get('/me', auth, getUserMe);
-router.get('/:userId', auth,  getUserId);
+router.get('/', getUser);
+router.get('/me', getUserMe);
+router.get('/:userId', parameterIdValid('id'), getUserId);
 router.post('/', createUser);
 router.patch('/me', auth, userValid, updateUserInfo);
 router.patch('/me/avatar', auth, userAvatarValid, updateAvatar);
