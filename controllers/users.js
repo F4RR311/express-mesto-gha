@@ -47,23 +47,24 @@ module.exports.createUser = (req, res, next) => {
     email,
     password,
   } = req.body;
-  Users.findOne({email})
+
+  User.findOne({ email })
     .then((user) => {
       if (user) {
-        next(new ErrorConflict(`Пользователь с таким email уже зарегистрирован`));
+        next(new ErrorConflict('Пользователь с таким email уже зарегистрирован'));
       }
       return bcrypt.hash(password, 10);
     })
-    .then((hash) => Users.create({
+    .then((hash) => User.create({
       name,
       about,
       avatar,
       email,
       password: hash,
     }))
-    .then((user) => Users.findOne({_id: user._id})) // скрываем пароль
+    .then((user) => User.findOne({ _id: user._id }))
     .then((user) => {
-      res.send(user);
+      res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -75,6 +76,7 @@ module.exports.createUser = (req, res, next) => {
       }
     });
 };
+
 
 module.exports.updateUserInfo = (req, res, next) => {
   const {name, about} = req.body;
