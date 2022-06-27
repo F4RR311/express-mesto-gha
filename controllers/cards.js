@@ -1,10 +1,11 @@
 const Card = require('../models/card');
 const ErrorNotFound = require('../errors/ErrorNotFound');
 const BadRequestError = require('../errors/BadRequestError');
+const Forbidden = require('../errors/Forbidden');
 
 module.exports.getCard = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send(cards))
+    .then((cards) => res.status(200).send(cards))
     .catch((err) => next(err));
 };
 
@@ -12,7 +13,7 @@ module.exports.createCard = (req, res, next) => {
   const {name, link} = req.body;
   const ownerId = req.user._id;
   Card.create({name, link, owner: ownerId})
-    .then((cards) => res.send(cards))
+    .then((cards) => res.status(200).send(cards))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));
@@ -32,7 +33,7 @@ module.exports.deleteCard = (req, res, next) => {
     })
     .then((card) => {
       if (card.owner.toString() !== userId) {
-        throw new Forbidden('Отказано в удалении. Пользователь не является владельцом карточки');
+        throw new Forbidden('Отказано в удалении. Пользователь не является владельцем карточки');
       }
       return Card.findByIdAndRemove(card._id);
     })
@@ -47,16 +48,16 @@ module.exports.likeCard = (req, res, next) => {
     {new: true},
   )
     .orFail(() => {
-      throw new ErrorNotFound('Карточка не найдена');
+      throw new ErrorNotFound('Передан несуществующий _id карточки.');
     })
     .then((card) => {
-      res.send(card);
+      res.status(200).send(card);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ErrorBadRequest('Переданы некорректные данные для постановки/снятии лайка.'));
+        next(new BadRequestError('Переданы некорректные данные для постановки/снятии лайка.'));
       } else if (err.name === 'CastError') {
-        next(new ErrorBadRequest('Передан несуществующий _id карточки.'));
+        next(new BadRequestError('Передан несуществующий _id карточки.'));
       } else {
         next(err);
       }
@@ -73,7 +74,7 @@ module.exports.dislikeCard = (req, res) => {
       throw new ErrorNotFound('Карточка не найдена');
     })
     .then((card) => {
-      res.send(card);
+      res.status(200).send(card);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {

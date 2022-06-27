@@ -9,7 +9,7 @@ const {NODE_ENV, JWT_SECRET} = process.env;
 
 module.exports.getUser = (req, res, next) => {
   Users.find({})
-    .then((users) => res.send(users))
+    .then((users) => res.status(200).send(users))
     .catch(next);
 };
 
@@ -19,7 +19,7 @@ module.exports.getUserMe = (req, res, next) => {
       if (!user._id) {
         next(new ErrorNotFound('Пользователь не найден'));
       }
-      res.send(user);
+      res.status(200).send(user);
     })
     .catch(next);
 };
@@ -38,7 +38,7 @@ module.exports.login = (req, res, next) => {
         httpOnly: true,
         sameSite: true,
       });
-      res.send({message: 'Авторизация успешна', token});
+      res.status(200).send({message: 'Авторизация успешна', token});
     })
     .catch(() => {
       next(new Unauthorized('Не правильный логин или пароль'));
@@ -48,10 +48,10 @@ module.exports.login = (req, res, next) => {
 module.exports.getUserId = (req, res, next) => {
   Users.findById(req.params.userId)
     .orFail(() => new ErrorNotFound('Пользователь не найден'))
-    .then((users) => res.send(users))
+    .then((users) => res.status(200).send(users))
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new ErrorBadRequest('Пользователь по указанному _id не найден.'));
+        next(new BadRequestError('Пользователь по указанному _id не найден.'));
       } else if (err.statusCode === 404) {
         next(new ErrorNotFound('Пользователь по указанному _id не найден.'));
       } else {
@@ -85,7 +85,7 @@ module.exports.createUser = (req, res, next) => {
     }))
     .then((user) => User.findOne({_id: user._id}))
     .then((user) => {
-      res.send(user);
+      res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -101,12 +101,17 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.updateUserInfo = (req, res, next) => {
   const {name, about} = req.body;
-  Users.findByIdAndUpdate(req.user._id, {name, about}, {new: true, runValidators: true})
+  Users.findByIdAndUpdate(req.user._id,
+    {name, about},
+    {
+      new: true, runValidators: true
+    }
+  )
     .orFail(() => {
       throw new BadRequestError('Переданы некорректные данные');
     })
     .then((user) => {
-      res.send({data: user});
+      res.status(200).send({data: user});
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -119,9 +124,14 @@ module.exports.updateUserInfo = (req, res, next) => {
 
 module.exports.updateAvatar = (req, res, next) => {
   const {avatar} = req.body;
-  Users.findByIdAndUpdate(req.user._id, {avatar}, {new: true, runValidators: true})
+  Users.findByIdAndUpdate(req.user._id,
+    {avatar},
+    {
+      new: true, runValidators: true
+    }
+  )
     .then((user) => {
-      res.send({data: user});
+      res.status(200).send({data: user});
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
