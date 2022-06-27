@@ -5,7 +5,6 @@ const ErrorNotFound = require('../errors/ErrorNotFound');
 const ErrorConflict = require('../errors/ErrorConflict');
 const BadRequestError = require('../errors/BadRequestError');
 const Unauthorized = require('../errors/Unauthorized');
-const {NODE_ENV, JWT_SECRET} = process.env;
 
 module.exports.getUser = (req, res, next) => {
   Users.find({})
@@ -26,19 +25,18 @@ module.exports.getUserMe = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const {email, password} = req.body;
-  return Users.findUserByCredentials(res, email, password)
+  return Users.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
         {_id: user._id},
-        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+        'secret-123',
         {expiresIn: '7d'},
       );
       res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
-        sameSite: true,
-      });
-      res.status(200).send({message: 'Авторизация успешна', token});
+      })
+        .send({token});
     })
     .catch(() => {
       next(new Unauthorized('Не правильный логин или пароль'));
@@ -46,11 +44,9 @@ module.exports.login = (req, res, next) => {
 };
 
 module.exports.getUserId = (req, res, next) => {
-  Users.findById(req.params.userId)
+  Users.findById(req.user._id)
+    .orFail(() => new ErrorNotFound('Запрашиваемый пользователь не найден'))
     .then((user) => {
-      if (!user) {
-        throw new ErrorNotFound('Запрашиваемый пользователь не найден');
-      }
       res.send({data: user});
     })
     .catch(next);
@@ -106,12 +102,14 @@ module.exports.updateUserInfo = (req, res, next) => {
       if (!user) {
         throw new ErrorNotFound('Запрашиваемый пользователь не найден');
       }
-      res.send({ data: user });
+      res.send({data: user});
     })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
         next(new BadRequestError('Переданы некорректные данные'));
-      } else { next(err); }
+      } else {
+        next(err);
+      }
     });
 };
 
@@ -124,11 +122,14 @@ module.exports.updateAvatar = (req, res, next) => {
     }
   )
     .then((user) => {
-      res.status(200).send({data: user});
+      if (!user) {
+        throw new ErrorNotFound('Запрашиваемый пользователь не найден');
+      }
+      res.send({data: user});
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError('Переданы некорректные данные при создании пользователя.'));
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные'));
       } else {
         next(err);
       }
