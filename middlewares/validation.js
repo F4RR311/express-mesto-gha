@@ -9,6 +9,7 @@ const validateUrl = (value, helpers) => {
   return value;
 };
 
+
 const registerValid = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
