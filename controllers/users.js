@@ -5,7 +5,7 @@ const ErrorNotFound = require('../errors/ErrorNotFound');
 const ErrorConflict = require('../errors/ErrorConflict');
 const BadRequestError = require('../errors/BadRequestError');
 const Unauthorized = require('../errors/Unauthorized');
-const { NODE_ENV, JWT_SECRET } = process.env;
+const {NODE_ENV, JWT_SECRET} = process.env;
 
 module.exports.getUser = (req, res, next) => {
   Users.find({})
@@ -22,6 +22,27 @@ module.exports.getUserMe = (req, res, next) => {
       res.send(user);
     })
     .catch(next);
+};
+
+module.exports.login = (req, res, next) => {
+  const {email, password} = req.body;
+  return Users.findUserByCredentials(res, email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        {_id: user._id},
+        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+        {expiresIn: '7d'},
+      );
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+        sameSite: true,
+      });
+      res.send({message: 'Авторизация успешна', token});
+    })
+    .catch(() => {
+      next(new Unauthorized('Не правильный логин или пароль'));
+    });
 };
 
 module.exports.getUserId = (req, res, next) => {
@@ -48,7 +69,7 @@ module.exports.createUser = (req, res, next) => {
     password,
   } = req.body;
 
-  User.findOne({ email })
+  User.findOne({email})
     .then((user) => {
       if (user) {
         next(new ErrorConflict('Пользователь с таким email уже зарегистрирован'));
@@ -62,13 +83,13 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => User.findOne({ _id: user._id }))
+    .then((user) => User.findOne({_id: user._id}))
     .then((user) => {
-      res.status(200).send(user);
+      res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ErrorBadRequest('Переданы некорректные данные.'));
+        next(new BadRequestError('Переданы некорректные данные.'));
       } else if (err.code === 11000) {
         next(new ErrorConflict('Пользователь уже существует'));
       } else {
@@ -85,11 +106,11 @@ module.exports.updateUserInfo = (req, res, next) => {
       throw new BadRequestError('Переданы некорректные данные');
     })
     .then((user) => {
-      res.send({ data: user });
+      res.send({data: user});
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ErrorBadRequest('Переданы некорректные данные при создании пользователя.'));
+        next(new BadRequestError('Переданы некорректные данные при создании пользователя.'));
       } else {
         next(err);
       }
@@ -99,38 +120,15 @@ module.exports.updateUserInfo = (req, res, next) => {
 module.exports.updateAvatar = (req, res, next) => {
   const {avatar} = req.body;
   Users.findByIdAndUpdate(req.user._id, {avatar}, {new: true, runValidators: true})
-    .orFail(() => {
-      throw new BadRequestError('Переданы некорректные данные');
-    })
     .then((user) => {
-      res.status(200).send({ data: user });
+      res.send({data: user});
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ErrorBadRequest('Переданы некорректные данные при создании пользователя.'));
+        next(new BadRequestError('Переданы некорректные данные при создании пользователя.'));
       } else {
         next(err);
       }
     });
 };
 
-module.exports.login = (req, res, next) => {
-  const {email, password} = req.body;
-  return Users.findUserByCredentials(res, email, password)
-    .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
-        { expiresIn: '7d' },
-      );
-      res.cookie('jwt', token, {
-        maxAge: 3600000 * 24 * 7,
-        httpOnly: true,
-        sameSite: true,
-      });
-      res.send({message: 'Авторизация успешна', token});
-    })
-    .catch(() => {
-      next(new Unauthorized('Не правильный логин или пароль'));
-    });
-};
