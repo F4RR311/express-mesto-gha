@@ -42,7 +42,8 @@ module.exports.login = (req, res, next) => {
 };
 
 module.exports.getUserId = (req, res, next) => {
-  User.findById(req.user._id)
+  const { userId } = req.params
+  User.findById(userId)
     .then((user) => {
       if (!user) {
         throw new ErrorNotFound('Запрашиваемый пользователь не найден');
