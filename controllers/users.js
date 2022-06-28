@@ -8,7 +8,7 @@ const Unauthorized = require('../errors/Unauthorized');
 
 module.exports.getUser = (req, res, next) => {
   User.find({})
-    .then((users) => res.send({data: users}))
+    .then((users) => res.send({ data: users }))
     .catch(next);
 };
 
@@ -16,25 +16,25 @@ module.exports.getUserMe = (req, res, next) => {
   User.findById(req.user._id)
     .orFail(() => new ErrorNotFound('Запрашиваемый пользователь не найден'))
     .then((user) => {
-      res.status(200).send({data: user});
+      res.status(200).send({ data: user });
     })
     .catch(next);
 };
 
 module.exports.login = (req, res, next) => {
-  const {email, password} = req.body;
+  const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
-        {_id: user._id},
+        { _id: user._id },
         'secret-key',
-        {expiresIn: '7d'},
+        { expiresIn: '7d' },
       );
       res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
       })
-        .send({token});
+        .send({ token });
     })
     .catch(() => {
       next(new Unauthorized('Не правильный логин или пароль'));
@@ -42,14 +42,14 @@ module.exports.login = (req, res, next) => {
 };
 
 module.exports.getUserId = (req, res, next) => {
-  const { userId } = req.params
+  const { userId } = req.params;
   User.findById(userId)
     .then((user) => {
       if (!user) {
         throw new ErrorNotFound('Запрашиваемый пользователь не найден');
       }
 
-      res.send({data: user});
+      res.send({ data: user });
     })
     .catch(next);
 };
@@ -91,16 +91,15 @@ module.exports.createUser = (req, res, next) => {
     });
 };
 
-
 module.exports.updateUserInfo = (req, res, next) => {
-  const {name, about} = req.body;
+  const { name, about } = req.body;
   const userId = req.user._id;
-  User.findByIdAndUpdate(userId, {name, about}, {new: true, runValidators: true})
+  User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         throw new ErrorNotFound('Запрашиваемый пользователь не найден');
       }
-      res.send({data: user});
+      res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
@@ -112,14 +111,14 @@ module.exports.updateUserInfo = (req, res, next) => {
 };
 
 module.exports.updateAvatar = (req, res, next) => {
-  const {avatar} = req.body;
+  const { avatar } = req.body;
   const userId = req.user._id;
-  User.findByIdAndUpdate(userId, {avatar}, {new: true, runValidators: true})
+  User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         throw new ErrorNotFound('Запрашиваемый пользователь не найден');
       }
-      res.send({data: user});
+      res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
@@ -129,4 +128,3 @@ module.exports.updateAvatar = (req, res, next) => {
       }
     });
 };
-

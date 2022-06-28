@@ -9,7 +9,7 @@ const {
 } = require('../controllers/cards');
 
 const {
-  validCardId, validCard
+  validCardId, validCard,
 } = require('../middlewares/validation');
 
 cardsRouter.get('/', getCard);
