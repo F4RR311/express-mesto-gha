@@ -46,7 +46,7 @@ module.exports.deleteCard = (req, res, next) => {
 };
 
 module.exports.likeCard = (req, res, next) => {
-  Card.findByIdAndUpdate(req.params.cardid, {$addToSet: {likes: req.user._id}}, {new: true})
+  Card.findByIdAndUpdate(req.params.cardId, {$addToSet: {likes: req.user._id}}, {new: true})
     .then((cardData) => {
       if (!cardData) {
         throw new ErrorNotFound('Запрашиваемая карточка не найдена');
@@ -58,7 +58,7 @@ module.exports.likeCard = (req, res, next) => {
 };
 
 module.exports.dislikeCard = (req, res,next) => {
-  Card.findByIdAndUpdate(req.params.cardid, {$pull: {likes: req.user._id}}, {new: true})
+  Card.findByIdAndUpdate(req.params.cardId, {$pull: {likes: req.user._id}}, {new: true})
     .then((cardData) => {
       if (!cardData) {
         throw new ErrorNotFound('Запрашиваемая карточка не найдена');
