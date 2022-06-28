@@ -1,19 +1,19 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const Users = require('../models/user');
+const User = require('../models/user');
 const ErrorNotFound = require('../errors/ErrorNotFound');
 const ErrorConflict = require('../errors/ErrorConflict');
 const BadRequestError = require('../errors/BadRequestError');
 const Unauthorized = require('../errors/Unauthorized');
 
 module.exports.getUser = (req, res, next) => {
-  Users.find({})
+  User.find({})
     .then((users) => res.send({data: users}))
     .catch(next);
 };
 
 module.exports.getUserMe = (req, res, next) => {
-  Users.findById(req.user._id)
+  User.findById(req.user._id)
     .then((user) => {
       if (!user._id) {
         next(new ErrorNotFound('Пользователь не найден'));
@@ -25,11 +25,11 @@ module.exports.getUserMe = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const {email, password} = req.body;
-  return Users.findUserByCredentials(email, password)
+  return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
         {_id: user._id},
-        'secret-123',
+        'secret-key',
         {expiresIn: '7d'},
       );
       res.cookie('jwt', token, {
@@ -44,7 +44,7 @@ module.exports.login = (req, res, next) => {
 };
 
 module.exports.getUserId = (req, res, next) => {
-  Users.findById(req.user._id)
+  User.findById(req.user._id)
     .orFail(() => new ErrorNotFound('Запрашиваемый пользователь не найден'))
     .then((user) => {
       res.send({data: user});
@@ -92,7 +92,7 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.updateUserInfo = (req, res, next) => {
   const {name, about} = req.body;
-  Users.findByIdAndUpdate(req.user._id,
+  User.findByIdAndUpdate(req.user._id,
     {name, about},
     {
       new: true, runValidators: true
@@ -115,7 +115,7 @@ module.exports.updateUserInfo = (req, res, next) => {
 
 module.exports.updateAvatar = (req, res, next) => {
   const {avatar} = req.body;
-  Users.findByIdAndUpdate(req.user._id,
+  User.findByIdAndUpdate(req.user._id,
     {avatar},
     {
       new: true, runValidators: true
