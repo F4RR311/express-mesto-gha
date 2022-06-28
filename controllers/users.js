@@ -14,11 +14,9 @@ module.exports.getUser = (req, res, next) => {
 
 module.exports.getUserMe = (req, res, next) => {
   User.findById(req.user._id)
+    .orFail(() => new ErrorNotFound('Запрашиваемый пользователь не найден'))
     .then((user) => {
-      if (!user._id) {
-        next(new ErrorNotFound('Пользователь не найден'));
-      }
-      res.status(200).send(user);
+      res.status(200).send({data: user});
     })
     .catch(next);
 };
@@ -45,8 +43,11 @@ module.exports.login = (req, res, next) => {
 
 module.exports.getUserId = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail(() => new ErrorNotFound('Запрашиваемый пользователь не найден'))
     .then((user) => {
+      if (!user) {
+        throw new ErrorNotFound('Запрашиваемый пользователь не найден');
+      }
+
       res.send({data: user});
     })
     .catch(next);
@@ -92,12 +93,8 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.updateUserInfo = (req, res, next) => {
   const {name, about} = req.body;
-  User.findByIdAndUpdate(req.user._id,
-    {name, about},
-    {
-      new: true, runValidators: true
-    }
-  )
+  const userId = req.user._id;
+  User.findByIdAndUpdate(userId, {name, about}, {new: true, runValidators: true})
     .then((user) => {
       if (!user) {
         throw new ErrorNotFound('Запрашиваемый пользователь не найден');
@@ -115,12 +112,8 @@ module.exports.updateUserInfo = (req, res, next) => {
 
 module.exports.updateAvatar = (req, res, next) => {
   const {avatar} = req.body;
-  User.findByIdAndUpdate(req.user._id,
-    {avatar},
-    {
-      new: true, runValidators: true
-    }
-  )
+  const userId = req.user._id;
+  User.findByIdAndUpdate(userId, {avatar}, {new: true, runValidators: true})
     .then((user) => {
       if (!user) {
         throw new ErrorNotFound('Запрашиваемый пользователь не найден');

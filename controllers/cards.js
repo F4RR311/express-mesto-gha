@@ -11,8 +11,8 @@ module.exports.getCard = (req, res, next) => {
 
 module.exports.createCard = (req, res, next) => {
   const {name, link} = req.body;
-  const ownerId = req.user._id;
-  Card.create({name, link, ownerId})
+  const owner = req.user._id;
+  Card.create({name, link, owner})
     .then((card) => res.status(201).send({data: card}))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -46,32 +46,24 @@ module.exports.deleteCard = (req, res, next) => {
 };
 
 module.exports.likeCard = (req, res, next) => {
-  Card.findByIdAndUpdate(
-    req.params.cardid,
-    {$addToSet: {likes: req.user._id}},
-    {new: true}
-  )
-    .then((card) => {
-      if(!card){
-        throw new  ErrorNotFound('Запрашиваемая карточка не найдена');
+  Card.findByIdAndUpdate(req.params.cardid, {$addToSet: {likes: req.user._id}}, {new: true})
+    .then((cardData) => {
+      if (!cardData) {
+        throw new ErrorNotFound('Запрашиваемая карточка не найдена');
       }
-      res.send({ data: card });
+      res.send({data: cardData});
     })
     .catch(next);
 
 };
 
 module.exports.dislikeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardid,
-    {$pull: {likes: req.user._id}},
-    {new: true}
-  )
-    .then((card) => {
-      if (!card) {
+  Card.findByIdAndUpdate(req.params.cardid, {$pull: {likes: req.user._id}}, {new: true})
+    .then((cardData) => {
+      if (!cardData) {
         throw new ErrorNotFound('Запрашиваемая карточка не найдена');
       }
-      res.send({ data: card });
+      res.send({data: cardData});
     })
     .catch(next);
 };
